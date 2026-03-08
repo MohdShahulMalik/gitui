@@ -27,7 +27,7 @@ use crossterm::event::Event;
 use itertools::Itertools;
 use ratatui::{
 	layout::{Alignment, Constraint, Direction, Layout},
-	style::{Color, Style},
+	style::{Color, Modifier, Style},
 	widgets::{Block, BorderType, Borders, Paragraph},
 };
 
@@ -219,15 +219,26 @@ impl Status {
 					)
 				});
 
+			let status = match self.diff_target {
+				DiffTarget::Stage => " (STAGED)",
+				DiffTarget::WorkingDir => " (UNSTAGED)",
+			};
+
 			let w = Paragraph::new(format!(
-				"{ahead_behind}{{{branch_name}}}"
+				"{}{}{}",
+				ahead_behind,
+				branch_name.to_uppercase(),
+				status
 			))
-			.alignment(Alignment::Right);
+			.alignment(Alignment::Left)
+			.style(
+				Style::default()
+					.fg(Color::Cyan)
+					.add_modifier(Modifier::BOLD),
+			);
 
 			let mut rect = if self.index_wd.focused() {
-				let mut rect = chunks[0];
-				rect.y += rect.height.saturating_sub(1);
-				rect
+				chunks[0]
 			} else {
 				chunks[1]
 			};
