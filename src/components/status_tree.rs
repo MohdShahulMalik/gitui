@@ -31,6 +31,7 @@ pub struct StatusTreeComponent {
 	current_hash: u64,
 	focused: bool,
 	show_selection: bool,
+	show_title: bool,
 	queue: Queue,
 	theme: SharedTheme,
 	key_config: SharedKeyConfig,
@@ -48,6 +49,7 @@ impl StatusTreeComponent {
 			current_hash: 0,
 			focused: focus,
 			show_selection: focus,
+			show_title: true,
 			queue: env.queue.clone(),
 			theme: env.theme.clone(),
 			key_config: env.key_config.clone(),
@@ -56,6 +58,11 @@ impl StatusTreeComponent {
 			visible: false,
 			revision: None,
 		}
+	}
+
+	///
+	pub fn set_show_title(&mut self, show: bool) {
+		self.show_title = show;
 	}
 
 	pub fn set_commit(&mut self, revision: Option<CommitId>) {
@@ -349,10 +356,16 @@ impl DrawableComponent for StatusTreeComponent {
 				self.theme.text(false, false),
 			)];
 
+			let title = if self.show_title {
+				self.title.as_str()
+			} else {
+				""
+			};
+
 			ui::draw_list(
 				f,
 				r,
-				self.title.as_str(),
+				title,
 				items.into_iter(),
 				self.focused,
 				&self.theme,
@@ -394,10 +407,16 @@ impl DrawableComponent for StatusTreeComponent {
 				})
 				.skip(self.scroll_top.get());
 
+			let title = if self.show_title {
+				self.title.as_str()
+			} else {
+				""
+			};
+
 			ui::draw_list(
 				f,
 				r,
-				self.title.as_str(),
+				title,
 				items,
 				self.focused,
 				&self.theme,

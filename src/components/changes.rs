@@ -66,6 +66,11 @@ impl ChangesComponent {
 		self.files.show_selection(focus);
 	}
 
+	///
+	pub fn set_show_title(&mut self, show: bool) {
+		self.files.set_show_title(show);
+	}
+
 	/// returns true if list is empty
 	pub fn is_empty(&self) -> bool {
 		self.files.is_empty()
