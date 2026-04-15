@@ -209,15 +209,24 @@ impl Status {
 		chunks: &[ratatui::layout::Rect],
 	) {
 		if let Some(branch_name) = self.git_branch_name.last() {
-			let ahead_behind = self
-				.git_branch_state
-				.as_ref()
-				.map_or_else(String::new, |state| {
-					format!(
-						"\u{2191}{} \u{2193}{} ",
-						state.ahead, state.behind,
-					)
-				});
+			let (ahead_behind, no_upstream) =
+				self.git_branch_state.as_ref().map_or_else(
+					|| (String::new(), false),
+					|state| {
+						let ahead_behind = if state.has_upstream {
+							format!(
+								"\u{2191}{} \u{2193}{} ",
+								state.ahead, state.behind,
+							)
+						} else {
+							String::new()
+						};
+						(ahead_behind, !state.has_upstream)
+					},
+				);
+
+			let no_upstream_str =
+				if no_upstream { "◎ " } else { "" };
 
 			let status = match self.diff_target {
 				DiffTarget::Stage => " (STAGED)",
@@ -225,7 +234,8 @@ impl Status {
 			};
 
 			let w = Paragraph::new(format!(
-				"{}{}{}",
+				"{}{}{}{}",
+				no_upstream_str,
 				ahead_behind,
 				branch_name.to_uppercase(),
 				status
@@ -361,6 +371,10 @@ impl Status {
 				}
 			}
 
+			self.index.set_show_title(self.focus != Focus::Stage);
+			self.index_wd
+				.set_show_title(self.focus != Focus::WorkDir);
+
 			self.update_diff()?;
 
 			return Ok(true);
@@ -436,6 +450,8 @@ impl Status {
 				&self.repo.borrow().clone(),
 			)
 			.is_ok();
+
+		self.branch_compare();
 	}
 
 	///
@@ -621,17 +637,23 @@ impl Status {
 	}
 
 	fn can_push(&self) -> bool {
-		let is_ahead = self
-			.git_branch_state
-			.as_ref()
-			.is_none_or(|state| state.ahead > 0);
+		let has_remote = self.remotes.has_remote_for_push;
+		if !has_remote {
+			return false;
+		}
 
-		is_ahead && self.remotes.has_remote_for_push
+		match self.git_branch_state.as_ref() {
+			Some(state) => state.ahead > 0 || !state.has_upstream,
+			None => true,
+		}
 	}
 
-	const fn can_fetch(&self) -> bool {
+	fn can_fetch(&self) -> bool {
 		self.remotes.has_remote_for_fetch
-			&& self.git_branch_state.is_some()
+			&& self
+				.git_branch_state
+				.as_ref()
+				.map_or(false, |state| state.has_upstream)
 	}
 
 	fn can_abort_merge(&self) -> bool {
