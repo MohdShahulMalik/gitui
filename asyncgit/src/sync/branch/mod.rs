@@ -211,6 +211,8 @@ pub struct BranchCompare {
 	pub ahead: usize,
 	///
 	pub behind: usize,
+	///
+	pub has_upstream: bool,
 }
 
 ///
@@ -292,7 +294,16 @@ pub fn branch_compare_upstream(
 
 	let branch = repo.find_branch(branch, BranchType::Local)?;
 
-	let upstream = branch.upstream()?;
+	let upstream = match branch.upstream() {
+		Ok(upstream) => upstream,
+		Err(_) => {
+			return Ok(BranchCompare {
+				ahead: 0,
+				behind: 0,
+				has_upstream: false,
+			});
+		}
+	};
 
 	let branch_commit =
 		branch.into_reference().peel_to_commit()?.id();
@@ -303,7 +314,11 @@ pub fn branch_compare_upstream(
 	let (ahead, behind) =
 		repo.graph_ahead_behind(branch_commit, upstream_commit)?;
 
-	Ok(BranchCompare { ahead, behind })
+	Ok(BranchCompare {
+		ahead,
+		behind,
+		has_upstream: true,
+	})
 }
 
 /// Switch branch to given `branch_name`.
