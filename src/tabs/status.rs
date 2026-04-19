@@ -636,16 +636,18 @@ impl Status {
 			});
 	}
 
+	#[allow(clippy::missing_const_for_fn)]
 	fn can_push(&self) -> bool {
 		let has_remote = self.remotes.has_remote_for_push;
 		if !has_remote {
 			return false;
 		}
 
-		match self.git_branch_state.as_ref() {
-			Some(state) => state.ahead > 0 || !state.has_upstream,
-			None => true,
-		}
+		let Some(state) = self.git_branch_state.as_ref() else {
+			return true;
+		};
+
+		state.ahead > 0 || !state.has_upstream
 	}
 
 	fn can_fetch(&self) -> bool {
@@ -653,7 +655,7 @@ impl Status {
 			&& self
 				.git_branch_state
 				.as_ref()
-				.map_or(false, |state| state.has_upstream)
+				.is_some_and(|state| state.has_upstream)
 	}
 
 	fn can_abort_merge(&self) -> bool {
