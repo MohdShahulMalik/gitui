@@ -294,15 +294,12 @@ pub fn branch_compare_upstream(
 
 	let branch = repo.find_branch(branch, BranchType::Local)?;
 
-	let upstream = match branch.upstream() {
-		Ok(upstream) => upstream,
-		Err(_) => {
-			return Ok(BranchCompare {
-				ahead: 0,
-				behind: 0,
-				has_upstream: false,
-			});
-		}
+	let Ok(upstream) = branch.upstream() else {
+		return Ok(BranchCompare {
+			ahead: 0,
+			behind: 0,
+			has_upstream: false,
+		});
 	};
 
 	let branch_commit =
