@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+* show indicator (◎) when branch has not been pushed to remote yet (local-only branch)
+* titles in staged/unstaged areas now hide in non-focused area to improve branch info visibility
+* branch push now works in new repos after configuring a remote
+
 ## [0.28.0] - 2025-12-14
 
 **discard changes on checkout**
